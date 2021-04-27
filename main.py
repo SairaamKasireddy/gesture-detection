@@ -9,8 +9,11 @@ videoCapture = cv2.VideoCapture(0)
 screen_width = pyautogui.size().width
 screen_height = pyautogui.size().height
 ret, frame = videoCapture.read()
-frame_width = frame.shape[0]
-frame_height = frame.shape[1]
+frame_width = frame.shape[1]
+frame_height = frame.shape[0]
+half_frame_width = (int)(frame_width/2)
+half_frame_height = (int)(frame_height/2)
+print(screen_height,screen_width,frame_height,frame_width,half_frame_height,half_frame_width)
 
 # running a loop to continuously capture video and detect until the user wishes to quit by pressing 'q' key
 while True:
@@ -27,10 +30,10 @@ while True:
 
         # defining the area being concentrated and expected area for gesture to appear in
         # will be extended to whole screen in future development
-        concentrated_region = frame[250:550, 100:450]
+        concentrated_region = frame[half_frame_height-75:frame_height, half_frame_width-75:frame_width]
         # drawing a rectangle around this region to make it easier for the user to visualize the boundary within
         # which he should place the gesture
-        cv2.rectangle(frame, (250, 100), (550, 450), (0, 255, 0), 0)
+        cv2.rectangle(frame, (half_frame_width-75, half_frame_height-75), (frame_width, frame_height), (0, 255, 0), 0)
         # converting the concentrated region from RGB to HSV format
         region_in_hsv = cv2.cvtColor(concentrated_region, cv2.COLOR_BGR2HSV)
 
@@ -135,17 +138,20 @@ while True:
             else:
                 if arearatio < 12:
                     cv2.putText(frame, '0', (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
-                    # pyautogui.moveTo(cX+800, cY+600)
+                    # pyautogui.moveTo(cX * screen_width / half_frame_width, cY * screen_height / half_frame_height)
                 elif arearatio < 17.5:
                     cv2.putText(frame, 'Good Job', (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
                 else:
                     cv2.putText(frame, '1', (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
+                    extTop1 = tuple(contour[contour[:, :, 1].argmin()][0])
+                    # extTop = (extTop1[0] + screen_width - half_frame_width, extTop1[1] + screen_height - half_frame_height)
+                    pyautogui.moveTo(extTop1[0] * screen_width / half_frame_width, extTop1[1] * screen_height / half_frame_height)
                     # pyautogui.click()
 
         elif number_of_defects == 2:
             cv2.putText(frame, '2', (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
             # pyautogui.press('volumedown')
-            pyautogui.press('tab')
+            # pyautogui.press('tab')
 
         elif number_of_defects == 3:
 
@@ -157,9 +163,9 @@ while True:
         elif number_of_defects == 4:
             cv2.putText(frame, '4', (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
             # pyautogui.press('volumeup')
-            pyautogui.keyDown('shift')
-            pyautogui.press('tab')
-            pyautogui.keyUp('shift')
+            # pyautogui.keyDown('shift')
+            # pyautogui.press('tab')
+            # pyautogui.keyUp('shift')
 
         elif number_of_defects == 5:
             cv2.putText(frame, '5', (0, 50), font, 2, (0, 0, 255), 3, cv2.LINE_AA)
@@ -173,7 +179,12 @@ while True:
 
         # showing windows with camera input and masked concentrated region
         cv2.imshow('masked_input', masked_input)
-        cv2.imshow('frame', frame)
+        # cv2.imshow('frame', frame)
+        cv2.imshow('Area', concentrated_region)
+        cv2.setWindowProperty('Area', cv2.WND_PROP_TOPMOST, 1)
+        cv2.moveWindow('Area', screen_width-half_frame_width-100, screen_height-half_frame_height-125)
+        cv2.namedWindow('Area', cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty('Area', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
     except:
         pass
@@ -182,7 +193,7 @@ while True:
     # checking if input key 'q' is pressed by user to exit the application
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-    time.sleep(0.5)
+    # time.sleep(0.5)
 
 # closing all windows and releasing camera resources
 cv2.destroyAllWindows()
